@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini Chat UI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f8fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      color: #333;
+    }
+    textarea {
+      width: 400px;
+      height: 100px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      background: #0078ff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .response-box {
+      width: 400px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h2>💬 Gemini Chat Interface</h2>
+  <textarea id="prompt" placeholder="Type your question..."></textarea><br>
+  <button onclick="sendPrompt()">Generate</button>
+
+  <div id="response" class="response-box"></div>
+
+  <script>
+    async function sendPrompt() {
+      const prompt = document.getElementById("prompt").value;
+      const responseDiv = document.getElementById("response");
+      responseDiv.innerHTML = "Generating... ⏳";
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt }),
+        });
+        const data = await response.json();
+        responseDiv.innerHTML = data.response || "No response received.";
+      } catch (error) {
+        responseDiv.innerHTML = "Error: " + error;
+      }
+    }
+  </script>
+</body>
+</html>
