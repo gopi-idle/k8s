@@ -1,0 +1,57 @@
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+
+# Load environment
+load_dotenv()
+
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+if not GOOGLE_API_KEY:
+    raise ValueError("Missing GOOGLE_API_KEY in environment variables")
+
+genai.configure(api_key=GOOGLE_API_KEY)
+
+# Use supported model
+MODEL_NAME = "gemini-2.5-flash-lite"
+model = genai.GenerativeModel(MODEL_NAME)
+
+app = FastAPI(title="Gemini FastAPI Integration")
+
+# Enable CORS for frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Serve static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+class Query(BaseModel):
+    prompt: str
+
+@app.get("/")
+def home():
+    return {"message": "Welcome to Google Gemini API via FastAPI"}
+
+@app.post("/generate")
+def generate_text(request: Query):
+    try:
+        print(f"Prompt: {request.prompt}")
+        response = model.generate_content(request.prompt)
+        print(f"Gemini Output: {response.text}")
+        return {"response": response.text}
+    except Exception as e:
+        print("Error:", e)
+        raise HTTPException(detail=str(e))
+
+@app.get("/ui")
+def serve_ui():
+    return FileResponse("static/index.html")
